@@ -2,10 +2,9 @@
 
 
 require './vendor/autoload.php';
-use app\lib\Database;
+
+use app\lib\Model;
 use Symfony\Component\Dotenv\Dotenv;
 
 $env = new Dotenv();
-$env->load(__DIR__.'/.env');
-
-Database::connect();
+$env->load(__DIR__ . '/.env');

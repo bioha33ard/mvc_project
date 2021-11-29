@@ -3,22 +3,25 @@
 namespace app\lib;
 
 use PDO;
-use Throwable;
+use Throwable, JsonException;
 
 class Database
 {
+    protected PDO $connect;
     protected static Database $instance;
 
     /**
-     * @throws \JsonException
+     * @throws JsonException
      */
-    public static function connect(): PDO|int
+    public function connect(): PDO|int
     {
         try {
-            return new PDO(
-                "mysql:host={$_ENV['MYSQL_DATABASE_HOST']};dbname={$_ENV['MYSQL_DATABASE_NAME']}"
-                , $_ENV['MYSQL_DATABASE_USER'], $_ENV['MYSQL_DATABASE_PASSWORD']
+            $this->connect = new PDO(
+                "mysql:host={$_ENV['MYSQL_DATABASE_HOST']};dbname={$_ENV['MYSQL_DATABASE_NAME']}",
+                $_ENV['MYSQL_DATABASE_USER'],
+                $_ENV['MYSQL_DATABASE_PASSWORD']
             );
+            return $this->connect;
         } catch (Throwable $throwable) {
             return failed(
                 $throwable->getMessage(),

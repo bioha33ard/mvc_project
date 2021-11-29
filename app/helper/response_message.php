@@ -14,7 +14,7 @@ function ok(string $data, int $code = 200): int
 /**
  * @throws JsonException
  */
-function failed(string $data,int $code = null,array $trace = null): int
+function failed(string $data,$code = null,array $trace = null): int
 {
     $array =   [
         'data' => $data,
