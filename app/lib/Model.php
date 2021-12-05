@@ -10,7 +10,12 @@ use Throwable;
 class Model extends Database
 {
     
+    
     /**
+     * @param  string  $sql
+     * @param  array|null  $data
+     *
+     * @return bool|int|PDOStatement
      * @throws JsonException
      */
     public function query(
@@ -31,6 +36,10 @@ class Model extends Database
     }
     
     /**
+     * @param  string  $table
+     * @param  array  $where
+     *
+     * @return bool|PDOStatement
      * @throws JsonException
      */
     public function select(string $table, array $where): bool|PDOStatement
@@ -43,7 +52,7 @@ class Model extends Database
                 ->prepare("SELECT * FROM $table WHERE $condition");
             $query->execute($where);
             $query->setFetchMode(PDO::FETCH_OBJ);
-            
+    
             return $query;
         } catch (Throwable $throwable) {
             return failed($throwable->getMessage(), $throwable->getCode(),
@@ -51,8 +60,19 @@ class Model extends Database
         }
     }
     
-    public function update(string $table, array $fields, array $where)
-    {
+    /**
+     * @param  string  $table
+     * @param  array  $fields
+     * @param  array  $where
+     *
+     * @return bool|int|PDOStatement
+     * @throws JsonException
+     */
+    public function update(
+        string $table,
+        array $fields,
+        array $where
+    ): bool|int|PDOStatement {
         
         $data = array_merge($fields, $where);
 //        fields
@@ -71,12 +91,48 @@ class Model extends Database
         }
     }
     
+    /**
+     * @param  string  $table
+     * @param  array  $data
+     *
+     * @return bool|int|PDOStatement
+     * @throws JsonException
+     */
+    public function insert(string $table, array $data): bool|int|PDOStatement
+    {
+        
+        $fields = implode(' , ', array_keys($data));
+        $placeholders = array_map(static fn($items) => " :$items ",
+            array_keys($data));
+        $values = implode(',', $placeholders);
+        try {
+            $query = $this->connect()
+                ->prepare("INSERT INTO $table ($fields) VALUES ($values)");
+            $query->execute($data);
+            
+            return $query;
+        } catch (Throwable $throwable) {
+            return failed($throwable->getMessage(), $throwable->getCode(),
+                $throwable->getTrace());
+        }
+    }
+    
+    /**
+     * @param  array  $data
+     *
+     * @return string
+     */
     protected function buildFieldsString(array $data): string
     {
         
         return implode(' , ', $this->buildFields($data));
     }
     
+    /**
+     * @param  array  $data
+     *
+     * @return string
+     */
     protected function where(array $data): string
     {
         
@@ -86,6 +142,11 @@ class Model extends Database
             : implode('', $keys);
     }
     
+    /**
+     * @param  array  $data
+     *
+     * @return array
+     */
     protected function buildFields(array $data): array
     {
         
