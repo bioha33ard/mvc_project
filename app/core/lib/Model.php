@@ -1,6 +1,6 @@
 <?php
 
-namespace app\lib;
+namespace app\core\lib;
 
 use JsonException;
 use PDO;
@@ -35,14 +35,16 @@ abstract class Model extends Database
         }
     }
     
+    
+    
     /**
      * @param  string  $table
      * @param  array  $where
      *
-     * @return bool|PDOStatement
+     * @return mixed
      * @throws JsonException
      */
-    public function select(string $table, array $where): bool|PDOStatement
+    public function select(string $table, array $where): mixed
     {
         
         $columns = array_keys($where);
@@ -51,9 +53,8 @@ abstract class Model extends Database
             $query = $this->connect()
                 ->prepare("SELECT * FROM $table WHERE $condition");
             $query->execute($where);
-            $query->setFetchMode(PDO::FETCH_OBJ);
-    
-            return $query;
+            
+            return $query->fetch(PDO::FETCH_ASSOC);
         } catch (Throwable $throwable) {
             return failed($throwable->getMessage(), $throwable->getCode(),
                 $throwable->getTrace());
@@ -71,8 +72,8 @@ abstract class Model extends Database
         
         try {
             $query = $this->connect()->query("SELECT * FROM $table");
-            
-            return $query->fetchAll();
+    
+            return $query->fetchAll(PDO::FETCH_ASSOC);
         } catch (Throwable $throwable) {
             return failed($throwable->getMessage(), $throwable->getCode(),
                 $throwable->getTrace());
@@ -128,7 +129,7 @@ abstract class Model extends Database
             $query = $this->connect()
                 ->prepare("INSERT INTO $table ($fields) VALUES ($values)");
             $query->execute($data);
-        
+    
             return $query;
         } catch (Throwable $throwable) {
             return failed($throwable->getMessage(), $throwable->getCode(),
@@ -184,7 +185,7 @@ abstract class Model extends Database
             $query = $this->connect()
                 ->prepare("DELETE FROM $table WHERE $condition");
             $query->execute($where);
-            $query->setFetchMode(PDO::FETCH_OBJ);
+            $query->fetch(PDO::FETCH_ASSOC);
             
             return $query;
         } catch (Throwable $throwable) {

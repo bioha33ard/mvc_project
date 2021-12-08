@@ -2,7 +2,7 @@
 
 namespace app\Models;
 
-use app\lib\Model;
+use app\core\lib\Model;
 use JsonException;
 use PDOStatement;
 
@@ -13,6 +13,7 @@ class UserModel extends Model
     
     /**
      * @return int|bool|array
+     * @throws JsonException
      */
     public function getUsers(): int|bool|array
     {
@@ -20,13 +21,14 @@ class UserModel extends Model
         return $this->get($this->table);
     }
     
+    
     /**
      * @param  array  $where
      *
-     * @return bool|PDOStatement
+     * @return mixed
      * @throws JsonException
      */
-    public function getUsersWhere(array $where): bool|PDOStatement
+    public function getUsersWhere(array $where): mixed
     {
         
         return $this->select($this->table, $where);
