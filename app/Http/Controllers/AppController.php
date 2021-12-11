@@ -2,41 +2,26 @@
 
 namespace app\Http\Controllers;
 
-use app\core\lib\Auth;
-use app\core\lib\Controller;
-use app\Http\Requests\PostRequest;
-use app\Http\Requests\RegisterRequest;
+use app\core\Controller;
 use app\Models\UserModel;
 use JsonException;
+use PDOStatement;
 
 class AppController extends Controller
 {
     
-    
-    
     /**
+     * @param  int  $id
+     *
+     * @return bool|PDOStatement
      * @throws JsonException
      */
-    public static function login()
+    public static function index(int $id): bool|PDOStatement
     {
         
-        $login_request = PostRequest::checkError($_POST);
-        $auth = new Auth();
-        if ($auth->check(new UserModel(), [
-            'email'    => $login_request['email'],
-            'password' => $login_request['password'],
-        ])
-        ) {
-            print $_SESSION['id'];
-        }
+        $user = new UserModel();
         
-        return false;
-    }
-    
-    public static function register()
-    {
-        
-        $register_request = RegisterRequest::check($_POST);
+        return ok($user->getUsersWhere(['id' => $id]));
     }
     
 }
