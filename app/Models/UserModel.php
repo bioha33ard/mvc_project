@@ -11,6 +11,14 @@ class UserModel extends Model
     
     protected string $table = 'users';
     
+    public array $fillable
+        = [
+            'id',
+            'first_name',
+            'last_name',
+            'email',
+        ];
+    
     /**
      * @return int|bool|array
      * @throws JsonException
@@ -25,10 +33,10 @@ class UserModel extends Model
     /**
      * @param  array  $where
      *
-     * @return mixed
+     * @return bool|array|PDOStatement
      * @throws JsonException
      */
-    public function getUsersWhere(array $where): mixed
+    public function getUsersWhere(array $where): bool|array|PDOStatement
     {
         
         return $this->select($this->table, $where);

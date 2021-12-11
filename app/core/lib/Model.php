@@ -2,6 +2,7 @@
 
 namespace app\core\lib;
 
+use app\core\lib\QueryBuilder\BuildFields;
 use JsonException;
 use PDO;
 use PDOStatement;
@@ -10,6 +11,7 @@ use Throwable;
 abstract class Model extends Database
 {
     
+    use BuildFields;
     
     /**
      * @param  string  $sql
@@ -41,10 +43,10 @@ abstract class Model extends Database
      * @param  string  $table
      * @param  array  $where
      *
-     * @return mixed
+     * @return array|false|PDOStatement
      * @throws JsonException
      */
-    public function select(string $table, array $where): mixed
+    public function select(string $table, array $where): bool|array|PDOStatement
     {
         
         $columns = array_keys($where);
@@ -53,11 +55,12 @@ abstract class Model extends Database
             $query = $this->connect()
                 ->prepare("SELECT * FROM $table WHERE $condition");
             $query->execute($where);
+            $query->setFetchMode(PDO::FETCH_ASSOC);
             
-            return $query->fetch(PDO::FETCH_ASSOC);
+            return $query;
         } catch (Throwable $throwable) {
-            return failed($throwable->getMessage(), $throwable->getCode(),
-                $throwable->getTrace());
+            return failed((array)$throwable->getMessage(),
+                $throwable->getCode(), $throwable->getTrace());
         }
     }
     
@@ -72,11 +75,11 @@ abstract class Model extends Database
         
         try {
             $query = $this->connect()->query("SELECT * FROM $table");
-    
+            
             return $query->fetchAll(PDO::FETCH_ASSOC);
         } catch (Throwable $throwable) {
-            return failed($throwable->getMessage(), $throwable->getCode(),
-                $throwable->getTrace());
+            return failed((array)$throwable->getMessage(),
+                $throwable->getCode(), $throwable->getTrace());
         }
     }
     
@@ -100,14 +103,13 @@ abstract class Model extends Database
 //        where
         $wcolumns = $this->where(array_keys($where));
         try {
-            $query = $this->connect()
-                ->prepare("UPDATE $table SET $fcolumns WHERE $wcolumns ");
+            $query = $this->connect()->prepare("UPDATE $table SET $fcolumns WHERE $wcolumns ");
             $query->execute($data);
             
             return $query;
         } catch (Throwable $throwable) {
-            return failed($throwable->getMessage(), $throwable->getCode(),
-                $throwable->getTrace());
+            return failed((array)$throwable->getMessage(),
+                $throwable->getCode(), $throwable->getTrace());
         }
     }
     
@@ -122,18 +124,16 @@ abstract class Model extends Database
     {
         
         $fields = implode(' , ', array_keys($data));
-        $placeholders = array_map(static fn($items) => " :$items ",
-            array_keys($data));
+        $placeholders = array_map(static fn($items) => " :$items ", array_keys($data));
         $values = implode(',', $placeholders);
         try {
-            $query = $this->connect()
-                ->prepare("INSERT INTO $table ($fields) VALUES ($values)");
+            $query = $this->connect()->prepare("INSERT INTO $table ($fields) VALUES ($values)");
             $query->execute($data);
-    
+            
             return $query;
         } catch (Throwable $throwable) {
-            return failed($throwable->getMessage(), $throwable->getCode(),
-                $throwable->getTrace());
+            return failed((array)$throwable->getMessage(),
+                $throwable->getCode(), $throwable->getTrace());
         }
     }
     
@@ -150,12 +150,10 @@ abstract class Model extends Database
     ): bool|int|PDOStatement {
         
         $fields = implode(' , ', array_keys($data));
-        $placeholders = array_map(static fn($items) => " :$items ",
-            array_keys($data));
+        $placeholders = array_map(static fn($items) => " :$items ", array_keys($data));
         $values = implode(',', $placeholders);
         try {
-            $query = $this->connect()
-                ->prepare("INSERT INTO $table ($fields) VALUES ($values)");
+            $query = $this->connect()->prepare("INSERT INTO $table ($fields) VALUES ($values)");
             $this->connect()->beginTransaction();
             foreach ($data as $row) {
                 $query->execute($row);
@@ -164,8 +162,8 @@ abstract class Model extends Database
             
             return $query;
         } catch (Throwable $throwable) {
-            return failed($throwable->getMessage(), $throwable->getCode(),
-                $throwable->getTrace());
+            return failed((array)$throwable->getMessage(),
+                $throwable->getCode(), $throwable->getTrace());
         }
     }
     
@@ -182,52 +180,15 @@ abstract class Model extends Database
         $columns = array_keys($where);
         $condition = $this->where($columns);
         try {
-            $query = $this->connect()
-                ->prepare("DELETE FROM $table WHERE $condition");
+            $query = $this->connect()->prepare("DELETE FROM $table WHERE $condition");
             $query->execute($where);
             $query->fetch(PDO::FETCH_ASSOC);
             
             return $query;
         } catch (Throwable $throwable) {
-            return failed($throwable->getMessage(), $throwable->getCode(),
-                $throwable->getTrace());
+            return failed((array)$throwable->getMessage(),
+                $throwable->getCode(), $throwable->getTrace());
         }
-    }
-    
-    /**
-     * @param  array  $data
-     *
-     * @return string
-     */
-    protected function buildFieldsString(array $data): string
-    {
-        
-        return implode(' , ', $this->buildFields($data));
-    }
-    
-    /**
-     * @param  array  $data
-     *
-     * @return string
-     */
-    protected function where(array $data): string
-    {
-        
-        $keys = $this->buildFields($data);
-        
-        return (count($data) > 1) ? implode(' AND ', $keys)
-            : implode('', $keys);
-    }
-    
-    /**
-     * @param  array  $data
-     *
-     * @return array
-     */
-    protected function buildFields(array $data): array
-    {
-        
-        return array_map(static fn($items) => "$items = :$items", $data);
     }
     
 }
