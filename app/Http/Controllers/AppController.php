@@ -2,7 +2,7 @@
 
 namespace app\Http\Controllers;
 
-use app\core\Controller;
+use app\core\lib\Controller;
 use app\Models\UserModel;
 use JsonException;
 use PDOStatement;
